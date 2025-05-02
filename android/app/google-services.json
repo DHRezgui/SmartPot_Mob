@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "24633911044",
+    "firebase_url": "https://smartpot-3d8a5-default-rtdb.firebaseio.com",
+    "project_id": "smartpot-3d8a5",
+    "storage_bucket": "smartpot-3d8a5.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:24633911044:android:c49540283890d00d019251",
+        "android_client_info": {
+          "package_name": "com.example.smartpot"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "24633911044-gcmknih80h47huhh3bko56a99u9p4lvq.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.smartpot",
+            "certificate_hash": "052ba8217edfcfe2805ea17b616a74c6dc697487"
+          }
+        },
+        {
+          "client_id": "24633911044-59igkrafn974ja8f2h74vcdb0ea6om1t.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDhCCyikj0guQv9aQ7ohwBxNWtqoF9dWeM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "24633911044-59igkrafn974ja8f2h74vcdb0ea6om1t.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "24633911044-lja38l6ul742riabcb3mkafta6jufhv7.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.smartpot"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
