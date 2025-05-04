@@ -25,7 +25,7 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
           article.title,
           style: const TextStyle(fontWeight: FontWeight.w600),
         ),
-        backgroundColor: const Color(0xFF16A34A),
+        backgroundColor: const Color(0xFF047857),
         elevation: 0,
       ),
       body: SingleChildScrollView(

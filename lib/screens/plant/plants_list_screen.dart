@@ -174,11 +174,6 @@ class _MyPlantsPageState extends State<MyPlantsPage> {
             onPressed: () {},
             tooltip: 'Search',
           ),
-          IconButton(
-            icon: const Icon(Icons.more_vert, color: Colors.black87),
-            onPressed: () {},
-            tooltip: 'More options',
-          ),
           const SizedBox(width: 8),
         ],
       ),

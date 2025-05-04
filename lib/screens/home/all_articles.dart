@@ -73,14 +73,14 @@ L'hiver peut être une période difficile pour les plantes, surtout avec la dimi
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          'Tous les articles',
+          'All Articles',
           style: TextStyle(
             fontSize: 22,
             fontWeight: FontWeight.w600,
             letterSpacing: 1.2,
           ),
         ),
-        backgroundColor: const Color(0xFF16A34A),
+        backgroundColor: const Color(0xFF047857),
         elevation: 4,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.only(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:smartpot/widgets/custom_bottom_navbar.dart';
 
 class Plant {
   final String name;
@@ -91,10 +92,30 @@ class _SearchScreenState extends State<SearchScreen> {
 
   @override
   Widget build(BuildContext context) {
+    int bottomNavIndex = 2;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Search Plants'),
-        backgroundColor: Colors.green,
+        backgroundColor: Colors.white,
+        elevation: 0.5,
+        centerTitle: true,
+        title: const Text(
+          'Search Plants',
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 18,
+            color: Colors.black,
+          ),
+        ),
+        leading: Padding(
+          padding: const EdgeInsets.only(left: 16),
+          child: Image.asset(
+            'assets/images/logoApp1.png',
+            width: 24,
+            height: 24,
+            fit: BoxFit.contain,
+            semanticLabel: 'App logo',
+          ),
+        ),
       ),
       body: Column(
         children: [
@@ -326,6 +347,13 @@ class _SearchScreenState extends State<SearchScreen> {
             ),
           ],
         ],
+      ),
+      bottomNavigationBar: CustomBottomNavBar(
+        currentIndex: bottomNavIndex,
+        selectedColor: Color(0xFF047857),
+        unselectedColor: Color(0xFF6B7280),
+        selectedFontSize: 12,
+        unselectedFontSize: 10,
       ),
     );
   }
