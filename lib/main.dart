@@ -13,6 +13,7 @@ import 'screens/home/notification_screen.dart';
 import 'package:smartpot/screens/home/dashboard.dart';
 import 'package:smartpot/screens/plant/plants_list_screen.dart';
 import 'package:smartpot/screens/account/my_profile_screen.dart';
+import 'screens/auth/welcome_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -42,6 +43,7 @@ class PlantifyApp extends StatelessWidget {
         '/dashboard': (context) => DashboardScreen(),
         '/my_plants': (context) => MyPlantsScreen(),
         '/account': (context) => AccountScreen(),
+        '/welcome': (context) => const WelcomeScreen(),
       },
       // Gestion des routes non trouvées
       onUnknownRoute: (settings) {

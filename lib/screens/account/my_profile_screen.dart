@@ -1,8 +1,35 @@
 import 'package:flutter/material.dart';
 import 'package:smartpot/widgets/custom_bottom_navbar.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 class AccountScreen extends StatelessWidget {
   const AccountScreen({super.key});
+
+  Future<void> _signOut(BuildContext context) async {
+    final GoogleSignIn googleSignIn = GoogleSignIn();
+
+    try {
+      // Déconnexion Firebase
+      await FirebaseAuth.instance.signOut();
+
+      // Déconnexion Google si connecté
+      if (await googleSignIn.isSignedIn()) {
+        await googleSignIn.signOut();
+      }
+
+      // 🔥 Redirection vers WelcomeScreen
+      Navigator.pushNamedAndRemoveUntil(
+        context,
+        '/welcome',
+        (Route<dynamic> route) => false,
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error during sign out: $e')));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -11,6 +38,10 @@ class AccountScreen extends StatelessWidget {
     const gray300 = Color(0xFFD1D5DB);
     const gray500 = Color(0xFF6B7280);
     const white = Colors.white;
+
+    final user = FirebaseAuth.instance.currentUser;
+    final userEmail = user?.email ?? 'No Email';
+    final userName = user?.displayName ?? 'Username';
 
     return Scaffold(
       appBar: AppBar(
@@ -49,31 +80,29 @@ class AccountScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // Profile Section
             const CircleAvatar(
               radius: 40,
               backgroundImage: AssetImage('assets/images/profile.jpg'),
             ),
             const SizedBox(height: 10),
-            const Text(
-              'Username',
-              style: TextStyle(
+            Text(
+              userName,
+              style: const TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 18,
                 color: Colors.black,
               ),
             ),
             const SizedBox(height: 8),
-            const Text(
-              'Email: user@example.com',
-              style: TextStyle(
+            Text(
+              'Email: $userEmail',
+              style: const TextStyle(
                 fontWeight: FontWeight.normal,
                 fontSize: 14,
                 color: Colors.black,
               ),
             ),
             const SizedBox(height: 20),
-            // Banner
             Container(
               width: double.infinity,
               decoration: BoxDecoration(
@@ -105,7 +134,6 @@ class AccountScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 20),
-            // Account Settings Card
             Card(
               elevation: 5,
               shape: RoundedRectangleBorder(
@@ -120,18 +148,15 @@ class AccountScreen extends StatelessWidget {
                 subtitle: const Text('Manage your account settings'),
                 trailing: const Icon(Icons.arrow_forward_ios),
                 onTap: () {
-                  // Navigate to account settings
+                  // Naviguer vers les paramètres
                 },
               ),
             ),
             const SizedBox(height: 20),
-            // Log Out Button
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () {
-                  // Handle logout
-                },
+                onPressed: () => _signOut(context), // 🔥 Logout
                 style: ElevatedButton.styleFrom(
                   backgroundColor: green700,
                   padding: const EdgeInsets.symmetric(vertical: 14),
@@ -152,8 +177,8 @@ class AccountScreen extends StatelessWidget {
           ],
         ),
       ),
-      bottomNavigationBar: CustomBottomNavBar(
-        currentIndex: 3, // Account tab
+      bottomNavigationBar: const CustomBottomNavBar(
+        currentIndex: 3,
         selectedColor: green700,
         unselectedColor: gray500,
         selectedFontSize: 12,
