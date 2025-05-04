@@ -1,145 +1,252 @@
+import 'package:firebase_database/firebase_database.dart';
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:smartpot/widgets/custom_bottom_navbar.dart';
 
-class DashboardScreen extends StatelessWidget {
+class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    const green700 = Color(0xFF047857);
-    const gray200 = Color(0xFFE5E7EB);
-    const gray300 = Color(0xFFD1D5DB);
-    const gray500 = Color(0xFF6B7280);
-    const white = Colors.white;
+  State<DashboardScreen> createState() => _DashboardScreenState();
+}
 
+class _DashboardScreenState extends State<DashboardScreen> {
+  final DatabaseReference _dbRef = FirebaseDatabase.instance.ref(
+    'sensors_data',
+  );
+  double? humidity;
+  double? temperature;
+  double? soilMoisture;
+  List<FlSpot> humidityData = [];
+  List<FlSpot> temperatureData = [];
+  List<FlSpot> soilMoistureData = [];
+  bool loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _setupRealTimeListener();
+  }
+
+  void _setupRealTimeListener() {
+    _dbRef
+        .orderByKey()
+        .limitToLast(10)
+        .onValue
+        .listen(
+          (event) {
+            if (event.snapshot.exists) {
+              final data = event.snapshot.value as Map<dynamic, dynamic>;
+              final entries = data.entries.toList();
+
+              final latestEntry = entries.last.value as Map<dynamic, dynamic>;
+
+              setState(() {
+                humidity = latestEntry['humidity']?.toDouble();
+                temperature = latestEntry['temperature']?.toDouble();
+                soilMoisture = latestEntry['soilMoisture']?.toDouble();
+
+                humidityData = [];
+                temperatureData = [];
+                soilMoistureData = [];
+
+                for (int i = 0; i < entries.length; i++) {
+                  final entry = entries[i].value as Map<dynamic, dynamic>;
+                  humidityData.add(
+                    FlSpot(i.toDouble(), entry['humidity']?.toDouble() ?? 0.0),
+                  );
+                  temperatureData.add(
+                    FlSpot(
+                      i.toDouble(),
+                      entry['temperature']?.toDouble() ?? 0.0,
+                    ),
+                  );
+                  soilMoistureData.add(
+                    FlSpot(
+                      i.toDouble(),
+                      entry['soilMoisture']?.toDouble() ?? 0.0,
+                    ),
+                  );
+                }
+
+                loading = false;
+              });
+            }
+          },
+          onError: (error) {
+            setState(() => loading = false);
+            debugPrint('Firebase error: $error');
+          },
+        );
+  }
+
+  Widget _buildSensorCard({
+    required IconData icon,
+    required Color color,
+    required String title,
+    required double? value,
+    required String unit,
+  }) {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 32, color: color),
+            const SizedBox(height: 8),
+            Text(
+              title,
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              value != null ? '${value.toStringAsFixed(1)}$unit' : '--',
+              style: TextStyle(
+                color: color,
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  LineChartData _buildChartData() {
+    return LineChartData(
+      gridData: FlGridData(show: false),
+      titlesData: FlTitlesData(
+        bottomTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+        leftTitles: AxisTitles(
+          sideTitles: SideTitles(
+            showTitles: true,
+            getTitlesWidget:
+                (value, meta) => Text(
+                  value.toInt().toString(),
+                  style: const TextStyle(fontSize: 10),
+                ),
+            interval: 20,
+          ),
+        ),
+      ),
+      borderData: FlBorderData(show: false),
+      lineBarsData: [
+        LineChartBarData(
+          spots: humidityData,
+          isCurved: true,
+          color: Colors.blue,
+          barWidth: 3,
+          dotData: FlDotData(show: false),
+        ),
+        LineChartBarData(
+          spots: temperatureData,
+          isCurved: true,
+          color: Colors.orange,
+          barWidth: 3,
+          dotData: FlDotData(show: false),
+        ),
+        LineChartBarData(
+          spots: soilMoistureData,
+          isCurved: true,
+          color: Colors.green,
+          barWidth: 3,
+          dotData: FlDotData(show: false),
+        ),
+      ],
+      minY: 0,
+      maxY: 100,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: white,
-        elevation: 0.5,
-        centerTitle: true,
-        title: const Text(
-          'Dashboard',
-          style: TextStyle(
-            fontWeight: FontWeight.w600,
-            fontSize: 18,
-            color: Colors.black,
-          ),
-        ),
-        leading: Padding(
-          padding: const EdgeInsets.only(left: 16),
-          child: Image.asset(
-            'assets/images/logoApp1.png',
-            width: 24,
-            height: 24,
-            fit: BoxFit.contain,
-            semanticLabel: 'App logo',
-          ),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.search, color: Colors.black87),
-            onPressed: () {},
-            tooltip: 'Search',
-          ),
-          IconButton(
-            icon: const Icon(Icons.more_vert, color: Colors.black87),
-            onPressed: () {},
-            tooltip: 'More options',
-          ),
-          const SizedBox(width: 8),
-        ],
+        title: const Text('Tableau de bord'),
+        backgroundColor: Colors.green,
       ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-            child: Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(9999),
-                border: Border.all(color: gray300),
-                color: gray200,
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                      decoration: BoxDecoration(
-                        color: green700,
-                        borderRadius: BorderRadius.circular(9999),
+      body:
+          loading
+              ? const Center(child: CircularProgressIndicator())
+              : Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                    const Text(
+                      'CAPTEURS EN TEMPS REEL',
+                      style: TextStyle(
+                        fontSize: 12,
+                        letterSpacing: 1.5,
+                        fontWeight: FontWeight.w500,
                       ),
-                      alignment: Alignment.center,
-                      child: const Text(
-                        'Dashboard Overview',
-                        style: TextStyle(
-                          color: white,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 14,
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildSensorCard(
+                            icon: Icons.opacity,
+                            color: Colors.blue,
+                            title: 'Humidite',
+                            value: humidity,
+                            unit: '%',
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _buildSensorCard(
+                            icon: Icons.thermostat,
+                            color: Colors.orange,
+                            title: 'Temperature',
+                            value: temperature,
+                            unit: '°C',
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _buildSensorCard(
+                            icon: Icons.grass,
+                            color: Colors.green,
+                            title: 'Humidite du sol',
+                            value: soilMoisture,
+                            unit: '%',
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    const Text(
+                      'HISTORIQUE DES MESURES',
+                      style: TextStyle(
+                        fontSize: 12,
+                        letterSpacing: 1.5,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Expanded(
+                      child: Card(
+                        elevation: 2,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: LineChart(_buildChartData()),
                         ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          ),
-          Expanded(
-            child: ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
-                Card(
-                  elevation: 5,
-                  margin: const EdgeInsets.symmetric(vertical: 8),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: ListTile(
-                    leading: const Icon(Icons.grass, color: green700, size: 40),
-                    title: const Text(
-                      'Your Plant Statistics',
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    subtitle: const Text(
-                      'See how many plants you have and more!',
-                    ),
-                    trailing: const Icon(Icons.arrow_forward_ios),
-                    onTap: () {
-                      // Navigate to detailed statistics
-                    },
-                  ),
-                ),
-                Card(
-                  elevation: 5,
-                  margin: const EdgeInsets.symmetric(vertical: 8),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: ListTile(
-                    leading: const Icon(
-                      Icons.explore,
-                      color: green700,
-                      size: 40,
-                    ),
-                    title: const Text(
-                      'Explore Plants',
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    subtitle: const Text('Discover new plants and care tips!'),
-                    trailing: const Icon(Icons.arrow_forward_ios),
-                    onTap: () {
-                      // Handle navigation to explore
-                    },
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
       bottomNavigationBar: CustomBottomNavBar(
         currentIndex: 1,
-        selectedColor: green700,
-        unselectedColor: gray500,
+        selectedColor: Colors.green.shade700,
+        unselectedColor: Colors.grey.shade500,
         selectedFontSize: 12,
         unselectedFontSize: 10,
       ),

@@ -64,14 +64,32 @@ class PlantifyHomePage extends StatefulWidget {
 
 class _PlantifyHomePageState extends State<PlantifyHomePage> {
   int currentIndex = 0;
-
+  final FocusNode _searchFocusNode = FocusNode();
+  final TextEditingController _searchController = TextEditingController();
   // Liste des articles populaires
   List<Article> popularArticles = [];
 
   @override
   void initState() {
     super.initState();
-    loadArticles(); // appel de fonction pour charger les données
+    loadArticles();
+
+    _searchFocusNode.addListener(() {
+      if (_searchFocusNode.hasFocus) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const SearchScreen()),
+        );
+        _searchFocusNode.unfocus();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchFocusNode.dispose();
+    _searchController.dispose();
+    super.dispose();
   }
 
   void loadArticles() {
@@ -98,7 +116,7 @@ class _PlantifyHomePageState extends State<PlantifyHomePage> {
         troubleshooting: ['Yellowing leaves', 'Pest infestation'],
       ),
     ];
-    setState(() {}); // Met à jour l'affichage
+    setState(() {});
   }
 
   Widget buildPopularArticle(Article article) {
@@ -154,7 +172,7 @@ class _PlantifyHomePageState extends State<PlantifyHomePage> {
     String imageAsset,
     String label,
     String semanticLabel,
-    String categoryId, // Ajout d'un ID pour la catégorie
+    String categoryId,
   ) {
     return GestureDetector(
       onTap: () {
@@ -242,20 +260,18 @@ class _PlantifyHomePageState extends State<PlantifyHomePage> {
               ),
               const SizedBox(height: 12),
 
-              // Search bar
-              Builder(
-                builder: (context) {
-                  return TextField(
-                    onChanged: (text) {
-                      if (text.isNotEmpty) {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const SearchScreen(),
-                          ),
-                        );
-                      }
-                    },
+              // Search bar - Version modifiée
+              GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const SearchScreen(),
+                    ),
+                  );
+                },
+                child: AbsorbPointer(
+                  child: TextField(
                     decoration: InputDecoration(
                       hintText: 'Search plants..',
                       hintStyle: TextStyle(
@@ -275,8 +291,8 @@ class _PlantifyHomePageState extends State<PlantifyHomePage> {
                         borderSide: BorderSide.none,
                       ),
                     ),
-                  );
-                },
+                  ),
+                ),
               ),
 
               const SizedBox(height: 20),
