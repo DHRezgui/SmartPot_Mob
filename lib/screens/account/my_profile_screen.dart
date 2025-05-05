@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:smartpot/widgets/custom_bottom_navbar.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:smartpot/screens/account/account_settings_screen.dart';
 
 class AccountScreen extends StatelessWidget {
   const AccountScreen({super.key});
@@ -66,14 +67,6 @@ class AccountScreen extends StatelessWidget {
             semanticLabel: 'App logo',
           ),
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.more_vert, color: Colors.black87),
-            onPressed: () {},
-            tooltip: 'More options',
-          ),
-          const SizedBox(width: 8),
-        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -148,7 +141,12 @@ class AccountScreen extends StatelessWidget {
                 subtitle: const Text('Manage your account settings'),
                 trailing: const Icon(Icons.arrow_forward_ios),
                 onTap: () {
-                  // Naviguer vers les paramètres
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const AccountSettingsScreen(),
+                    ),
+                  );
                 },
               ),
             ),
