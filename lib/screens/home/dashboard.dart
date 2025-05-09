@@ -1,132 +1,97 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:smartpot/widgets/custom_bottom_navbar.dart';
-import 'package:firebase_database/firebase_database.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:smartpot/widgets/custom_bottom_navbar.dart';
 
 class DashboardScreen extends StatefulWidget {
-  const DashboardScreen({super.key});
+  const DashboardScreen({Key? key}) : super(key: key);
 
   @override
   State<DashboardScreen> createState() => _DashboardScreenState();
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
-  final DatabaseReference _dbRef = FirebaseDatabase.instance.ref(
-    'sensors_data',
-  );
-  double? humidity;
-  double? temperature;
-  double? soilMoisture;
-  double? luminosity;
+  bool loading = true;
+  Map<String, dynamic> _sensorData = {};
   List<FlSpot> humidityData = [];
   List<FlSpot> temperatureData = [];
   List<FlSpot> soilMoistureData = [];
-  List<FlSpot> luminosityData = [];
-  bool loading = true;
+  List<FlSpot> waterLevelData = [];
+
+  int _xAxisIndex = 0; // Variable pour suivre l'index de l'axe X
 
   @override
   void initState() {
     super.initState();
-    _setupRealTimeListener();
+    _setupFirestoreListener();
   }
 
-  void _setupRealTimeListener() {
-    _dbRef
-        .orderByKey()
-        .limitToLast(10)
-        .onValue
-        .listen(
-          (event) {
-            if (event.snapshot.exists) {
-              final data = event.snapshot.value as Map<dynamic, dynamic>;
-              final entries = data.entries.toList();
+  void _setupFirestoreListener() {
+    print("Listening to Firestore...");
 
-              final latestEntry = entries.last.value as Map<dynamic, dynamic>;
+    // On s'assure que les données sont triées par timestamp (ou autre champ pertinent)
+    FirebaseFirestore.instance
+        .collection('sensor_readings')
+        .orderBy(
+          'timestamp',
+          descending: true,
+        ) // Trier par timestamp décroissant
+        .limit(1)
+        .snapshots()
+        .listen(
+          (QuerySnapshot snapshot) {
+            if (snapshot.docs.isNotEmpty) {
+              final data = snapshot.docs.first.data() as Map<String, dynamic>;
 
               setState(() {
-                humidity = latestEntry['humidity']?.toDouble();
-                temperature = latestEntry['temperature']?.toDouble();
-                soilMoisture = latestEntry['soilMoisture']?.toDouble();
-                luminosity = latestEntry['luminosity']?.toDouble();
+                _sensorData = {
+                  'humidity': data['humidity'],
+                  'soilMoisture': data['soilMoisture'],
+                  'tempC': data['tempC'],
+                  'timestamp': data['timestamp'],
+                  'waterLevel': data['waterLevel'],
+                };
 
-                humidityData = [];
-                temperatureData = [];
-                soilMoistureData = [];
-                luminosityData = [];
+                // Ajouter un nouveau point pour chaque mesure avec un X unique
+                humidityData.add(
+                  FlSpot(
+                    _xAxisIndex.toDouble(),
+                    data['humidity']?.toDouble() ?? 0.0,
+                  ),
+                );
+                temperatureData.add(
+                  FlSpot(
+                    _xAxisIndex.toDouble(),
+                    data['tempC']?.toDouble() ?? 0.0,
+                  ),
+                );
+                soilMoistureData.add(
+                  FlSpot(
+                    _xAxisIndex.toDouble(),
+                    data['soilMoisture']?.toDouble() ?? 0.0,
+                  ),
+                );
+                waterLevelData.add(
+                  FlSpot(
+                    _xAxisIndex.toDouble(),
+                    data['waterLevel']?.toDouble() ?? 0.0,
+                  ),
+                );
 
-                for (int i = 0; i < entries.length; i++) {
-                  final entry = entries[i].value as Map<dynamic, dynamic>;
-                  humidityData.add(
-                    FlSpot(i.toDouble(), entry['humidity']?.toDouble() ?? 0.0),
-                  );
-                  temperatureData.add(
-                    FlSpot(
-                      i.toDouble(),
-                      entry['temperature']?.toDouble() ?? 0.0,
-                    ),
-                  );
-                  soilMoistureData.add(
-                    FlSpot(
-                      i.toDouble(),
-                      entry['soilMoisture']?.toDouble() ?? 0.0,
-                    ),
-                  );
-                  luminosityData.add(
-                    FlSpot(
-                      i.toDouble(),
-                      entry['luminosity']?.toDouble() ?? 0.0,
-                    ),
-                  );
-                }
+                // Incrémenter l'index pour la prochaine donnée
+                _xAxisIndex++;
 
                 loading = false;
               });
             }
           },
           onError: (error) {
-            setState(() => loading = false);
-            debugPrint('Firebase error: $error');
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(SnackBar(content: Text('Erreur Firebase: $error')));
+            print("Firestore error: $error");
+            setState(() {
+              loading = false;
+            });
           },
         );
-  }
-
-  Widget _buildSensorCard({
-    required IconData icon,
-    required Color color,
-    required String title,
-    required double? value,
-    required String unit,
-  }) {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 32, color: color),
-            const SizedBox(height: 8),
-            Text(
-              title,
-              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              value != null ? '${value.toStringAsFixed(1)}$unit' : '--',
-              style: TextStyle(
-                color: color,
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
   }
 
   LineChartData _buildChartData() {
@@ -170,15 +135,51 @@ class _DashboardScreenState extends State<DashboardScreen> {
           dotData: FlDotData(show: false),
         ),
         LineChartBarData(
-          spots: luminosityData,
+          spots: waterLevelData,
           isCurved: true,
-          color: Colors.yellow,
+          color: Colors.blue.shade200,
           barWidth: 3,
           dotData: FlDotData(show: false),
         ),
       ],
-      minY: 0,
-      maxY: 100,
+      minY: 0, // Ajustez en fonction de vos données
+      maxY: 100, // Ajustez en fonction de vos données
+    );
+  }
+
+  Widget _buildSensorCard({
+    required IconData icon,
+    required Color color,
+    required String title,
+    required double? value,
+    required String unit,
+  }) {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 32, color: color),
+            const SizedBox(height: 8),
+            Text(
+              title,
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              value != null ? '${value.toStringAsFixed(1)}$unit' : '--',
+              style: TextStyle(
+                color: color,
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -235,7 +236,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               icon: Icons.opacity,
                               color: Colors.blue,
                               title: 'Humidité',
-                              value: humidity,
+                              value: _sensorData['humidity'],
                               unit: '%',
                             ),
                           ),
@@ -245,7 +246,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               icon: Icons.thermostat,
                               color: Colors.orange,
                               title: 'Température',
-                              value: temperature,
+                              value: _sensorData['tempC'],
                               unit: '°C',
                             ),
                           ),
@@ -259,17 +260,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               icon: Icons.grass,
                               color: Colors.green,
                               title: 'Humidité du sol',
-                              value: soilMoisture,
+                              value: _sensorData['soilMoisture'],
                               unit: '%',
                             ),
                           ),
                           const SizedBox(width: 12),
                           Expanded(
                             child: _buildSensorCard(
-                              icon: Icons.light_mode,
-                              color: Colors.yellow,
-                              title: 'Luminosité',
-                              value: luminosity,
+                              icon: Icons.water_drop,
+                              color: Colors.blue.shade200,
+                              title: 'Niveau d\'eau',
+                              value: _sensorData['waterLevel'],
                               unit: '%',
                             ),
                           ),
@@ -306,9 +307,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             humidityData = [];
                             temperatureData = [];
                             soilMoistureData = [];
-                            luminosityData = [];
+                            waterLevelData = [];
                           });
-                          _setupRealTimeListener();
+                          _setupFirestoreListener();
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.green,
