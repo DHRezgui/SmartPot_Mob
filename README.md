@@ -1,4 +1,4 @@
-# smartpot
+# SmartPot_Mob
 
 SmartPot_Mob is the mobile application of the SmartPot project, providing a user-friendly interface for monitoring and controlling the Smartpot.
 
