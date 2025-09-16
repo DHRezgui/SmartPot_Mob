@@ -1,16 +1,10 @@
 # smartpot
 
-A new Flutter project.
+SmartPot_Mob is the mobile application of the SmartPot project, providing a user-friendly interface for monitoring and controlling the Smartpot.
 
-## Getting Started
+✨ Features:
 
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+- Displays real-time plant data collected from ESP32 sensors
+- Integrates with Firestore for cloud storage
+- Provides notifications and care recommendations
+- Developed in Flutter / Dart for cross-platform support
